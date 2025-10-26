@@ -234,18 +234,34 @@
                 // Hide the main puzzle content
                 puzzleContent.classList.add('hidden');
                 
-                // Construct the success content with the image. 
-                // Simplified classes for maximum display reliability.
-                successDisplay.innerHTML = `
-                    <h2 class="text-3xl sm:text-4xl font-extrabold text-green-500 mb-6 tracking-wider">
-                        CONGRATULATIONS! CODE ACCEPTED!
-                    </h2>
-                    <img 
-                        src="To Correct an Injustice.jpg" 
-                        alt="A detailed drawing of two skeletons in suits in a library, titled 'To Correct an Injustice.'" 
-                        class="rounded-xl shadow-2xl w-full max-w-xs sm:max-w-md mx-auto border-4 border-yellow-500 object-contain"
-                    />
-                `;
+                // Clear any previous content
+                successDisplay.innerHTML = ''; 
+
+                // 1. Create the Congratulations title
+                const h2 = document.createElement('h2');
+                h2.classList.add('text-3xl', 'sm:text-4xl', 'font-extrabold', 'text-green-500', 'mb-6', 'tracking-wider');
+                h2.textContent = 'CONGRATULATIONS! CODE ACCEPTED!';
+                
+                // 2. Create the image element
+                const img = document.createElement('img');
+                img.src = 'To Correct an Injustice.jpg'; // Direct reference to the uploaded file name
+                img.alt = "A detailed drawing of two skeletons in suits in a library, titled 'To Correct an Injustice.'";
+                img.classList.add(
+                    'rounded-xl', 'shadow-2xl', 'w-full', 'max-w-xs', 'sm:max-w-md', 'mx-auto', 
+                    'border-4', 'border-yellow-500', 'object-contain'
+                );
+                
+                // 3. Add an error handler for diagnostics
+                img.onerror = function() {
+                    console.error("Image failed to load from src='To Correct an Injustice.jpg'");
+                    img.alt = "ERROR: Image failed to load.";
+                    img.src = 'https://placehold.co/400x400/cc5500/ffffff?text=Image+Load+Error'; // Placeholder fallback
+                    img.style.maxWidth = '300px'; // Style the error placeholder
+                };
+
+                // 4. Append to the success container
+                successDisplay.appendChild(h2);
+                successDisplay.appendChild(img);
                 
                 // Show the success content
                 successDisplay.classList.remove('hidden');
