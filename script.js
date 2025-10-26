@@ -1,54 +1,96 @@
-// Wait for the DOM to be fully loaded before running the script
-document.addEventListener("DOMContentLoaded", () => {
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f4f4f4;
+    text-align: center;
+    margin: 0;
+    padding: 15px; /* Adds spacing on mobile */
+    box-sizing: border-box; /* Ensures padding doesn't create overflow */
+}
+
+h1 {
+    /* Responsive font size: (min, preferred, max) */
+    font-size: clamp(2rem, 8vw, 3rem);
+}
+
+#puzzle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+#grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
     
-    // The correct code sequence
-    const correctCode = ['3', '1', '1', '2', '2', '2', '2', '4', '2'];
+    /* Responsive width */
+    width: 90%; /* Takes up 90% of its container */
+    max-width: 300px; /* But won't get bigger than 300px on desktop */
+    margin-bottom: 20px;
+}
 
-    // Get references to all the important elements
-    const submitButton = document.getElementById("submit-btn");
-    const gridContainer = document.getElementById("grid-container");
-    const allInputs = document.querySelectorAll(".grid-input");
-    const successImage = document.getElementById("success-image");
-    const header = document.querySelector("h1"); // Get the header
+.grid-input {
+    /* Replaces fixed width/height */
+    width: 100%; /* Fills its grid cell */
+    aspect-ratio: 1 / 1; /* Makes it a perfect square */
+    
+    /* Responsive font size */
+    font-size: clamp(1.5rem, 10vw, 2.5rem);
+    
+    text-align: center;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box; /* Important for 100% width */
+}
 
-    // Add a click event listener to the submit button
-    submitButton.addEventListener("click", () => {
-        
-        // Create an array of the values currently in the input boxes
-        const userInput = [];
-        allInputs.forEach(input => {
-            userInput.push(input.value);
-        });
+/* Removes arrows from number inputs (if you use type="number") */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 
-        // Convert arrays to strings to easily compare them
-        if (JSON.stringify(userInput) === JSON.stringify(correctCode)) {
-            // --- SUCCESS ---
-            // Hide the header, grid, and button
-            header.style.display = "none";
-            gridContainer.style.display = "none";
-            submitButton.style.display = "none";
-            
-            // Show the success image
-            successImage.style.display = "block";
+#submit-btn {
+    padding: 12px 25px;
+    font-size: clamp(1rem, 4vw, 1.2rem); /* Responsive font size */
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
 
-        } else {
-            // --- FAILURE ---
-            // 1. Add the 'shake' class to the grid
-            gridContainer.classList.add("shake");
+#submit-btn:hover {
+    background-color: #0056b3;
+}
 
-            // 2. Clear all the inputs
-            allInputs.forEach(input => {
-                input.value = "";
-            });
+#success-image {
+    display: none; /* Hidden by default */
+    
+    /* Responsive width */
+    width: 90%;
+    max-width: 450px; /* Max size on desktop */
+    
+    margin-top: 20px;
+    border: 3px solid #333;
+    border-radius: 10px;
+}
 
-            // 3. Set the focus back to the first input box
-            allInputs[0].focus();
+/* Shake animation (no changes needed) */
+.shake {
+    animation: shake 0.5s;
+}
 
-            // 4. Remove the 'shake' class after the animation finishes (500ms)
-            //    so it can shake again on the next wrong attempt
-            setTimeout(() => {
-                gridContainer.classList.remove("shake");
-            }, 500);
-        }
-    });
-});
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    50% { transform: translateX(10px); }
+    75% { transform: translateX(-10px); }
+    100% { translateX(0); }
+}
