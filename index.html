@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What a Butte! - Code Puzzle</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind to use 'Inter' font and custom animation -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    keyframes: {
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-10px)' },
+                            '20%, 40%, 60%, 80%': { transform: 'translateX(10px)' },
+                        }
+                    },
+                    animation: {
+                        shake: 'shake 0.5s ease-in-out',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styles for the grid inputs and to hide default arrows on number inputs */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield; /* Firefox */
+        }
+
+        .grid-input {
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 1 / 1; /* Ensures the input boxes are perfectly square and responsive */
+            font-size: 2rem; /* Large font for visibility */
+            text-align: center;
+            border: 2px solid #555;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        .grid-input:focus {
+            outline: none;
+            border-color: #f59e0b; /* Amber focus */
+            background-color: #1f2937; /* Darker background on focus */
+        }
+
+        /* Ensure the main container fills the viewport */
+        html, body {
+            height: 100%;
+        }
+    </style>
+</head>
+<body id="body" class="bg-gray-900 text-white font-sans flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-lg p-8 bg-gray-800 rounded-2xl shadow-2xl">
+        
+        <!-- Title -->
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-center mb-10 text-yellow-500 tracking-wider">
+            What a butte!
+        </h1>
+
+        <!-- The main puzzle container - shown initially -->
+        <div id="puzzle-content">
+            <!-- 3x3 Grid Container -->
+            <div id="grid-container" class="grid grid-cols-3 gap-3">
+                <!-- Grid inputs will be dynamically inserted here by JavaScript -->
+            </div>
+
+            <!-- Status Message and Button -->
+            <div class="mt-8 text-center">
+                <!-- Message area -->
+                <div id="message" class="h-10 text-xl font-semibold mb-4 text-gray-300">&nbsp;</div>
+                <button id="verify-button"
+                        class="w-full py-3 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold rounded-xl shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02]">
+                    CONFIRM
+                </button>
+            </div>
+        </div>
+
+        <!-- Success Content Container - hidden until the code is correct -->
+        <div id="success-display" class="hidden flex flex-col items-center text-center p-4">
+            <!-- Content will be inserted by JavaScript on successful code entry -->
+        </div>
+
+    </div>
+
+    <script>
+        // The new correct code sequence (Left-to-Right, Top-to-Bottom) as requested:
+        // Line 1 (LTR input): 3, 1, 1
+        // Line 2 (LTR input): 2, 2, 2
+        // Line 3 (LTR input): 2, 4, 2
+        const CORRECT_CODE = [3, 1, 1, 2, 2, 2, 2, 4, 2];
+        const GRID_SIZE = 9;
+
+        const gridContainer = document.getElementById('grid-container');
+        const verifyButton = document.getElementById('verify-button');
+        const messageDisplay = document.getElementById('message');
+        const body = document.getElementById('body');
+        const puzzleContent = document.getElementById('puzzle-content');
+        const successDisplay = document.getElementById('success-display');
+        let inputs = [];
+
+        // --- Utility Functions ---
+
+        /**
+         * Creates and inserts the 9 input elements into the grid container.
+         */
+        function initializeGrid() {
+            gridContainer.innerHTML = ''; // Clear existing
+            inputs = [];
+            for (let i = 0; i < GRID_SIZE; i++) {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.maxLength = 1; // Limit to single digit
+                input.min = 0;
+                input.max = 9;
+                input.placeholder = '';
+                input.classList.add('grid-input', 'bg-gray-700', 'text-yellow-300', 'rounded-lg');
+                input.dataset.index = i; // Store index for later
+                gridContainer.appendChild(input);
+                inputs.push(input);
+                
+                // Add event listeners for single-digit input and focus movement
+                input.addEventListener('input', handleInput);
+                input.addEventListener('keydown', handleKeyDown);
+            }
+            inputs[0].focus(); // Focus on the first input
+            updateMessage('&nbsp;'); // Set a non-breaking space to maintain layout height
+        }
+
+        /**
+         * Clears all input fields and resets the status message.
+         */
+        function resetInputs() {
+            inputs.forEach(input => input.value = '');
+            updateMessage('<span class="text-red-400">Code Reset. Try Again.</span>');
+            inputs[0].focus();
+        }
+
+        /**
+         * Updates the display message with the given text.
+         */
+        function updateMessage(text) {
+            messageDisplay.innerHTML = text;
+        }
+
+        /**
+         * Executes the screen shake animation on the body element.
+         */
+        function shakeScreen() {
+            body.classList.add('animate-shake');
+            setTimeout(() => {
+                body.classList.remove('animate-shake');
+            }, 500); // Duration matches the CSS animation
+        }
+
+        // --- Event Handlers ---
+
+        /**
+         * Handles the single-digit input and moves focus automatically.
+         */
+        function handleInput(event) {
+            const input = event.target;
+            let value = input.value;
+            
+            // Ensure only one character is entered (e.g., handles paste)
+            if (value.length > 1) {
+                input.value = value.charAt(0);
+            }
+
+            // Move to the next input field if a digit was entered
+            if (input.value && input.value.length === 1) {
+                const currentIndex = parseInt(input.dataset.index, 10);
+                const nextInput = inputs[currentIndex + 1];
+                if (nextInput) {
+                    nextInput.focus();
+                } else {
+                    // If it's the last input, focus on the verify button
+                    verifyButton.focus();
+                }
+            }
+        }
+
+        /**
+         * Handles backspace to clear and move focus back.
+         */
+        function handleKeyDown(event) {
+            const input = event.target;
+            const currentIndex = parseInt(input.dataset.index, 10);
+
+            if (event.key === 'Backspace' && input.value === '') {
+                const prevInput = inputs[currentIndex - 1];
+                if (prevInput) {
+                    prevInput.focus();
+                }
+            } else if (event.key === 'ArrowRight' && currentIndex < GRID_SIZE - 1) {
+                inputs[currentIndex + 1].focus();
+            } else if (event.key === 'ArrowLeft' && currentIndex > 0) {
+                inputs[currentIndex - 1].focus();
+            }
+        }
+
+        /**
+         * Checks the user's input against the correct code.
+         */
+        function checkCode() {
+            // 1. Collect all inputs and check if all are filled
+            const userCode = inputs.map(input => parseInt(input.value, 10));
+            const isComplete = userCode.every(val => !isNaN(val) && val >= 0 && val <= 9);
+
+            if (!isComplete) {
+                updateMessage('<span class="text-yellow-400">Please fill all 9 boxes.</span>');
+                shakeScreen();
+                return;
+            }
+
+            // 2. Compare with the correct code
+            const isCorrect = userCode.every((val, index) => val === CORRECT_CODE[index]);
+
+            if (isCorrect) {
+                // SUCCESS
+                
+                // Hide the main puzzle content
+                puzzleContent.classList.add('hidden');
+                
+                // Construct the success content with the image
+                successDisplay.innerHTML = `
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-green-500 mb-6 tracking-wider">
+                        CONGRATULATIONS! CODE ACCEPTED!
+                    </h2>
+                    <img 
+                        src="To Correct an Injustice.jpg" 
+                        alt="A detailed drawing of two skeletons in suits in a library, titled 'To Correct an Injustice.'" 
+                        class="rounded-xl shadow-2xl max-w-full h-auto border-4 border-yellow-500 transition duration-300 transform hover:scale-[1.01]" 
+                    />
+                `;
+                
+                // Show the success content
+                successDisplay.classList.remove('hidden');
+
+            } else {
+                // FAILURE
+                updateMessage('<span class="text-red-500">Incorrect Code! Shaking and Resetting...</span>');
+                shakeScreen();
+                // Wait for the shake animation to finish before resetting
+                setTimeout(() => {
+                    resetInputs();
+                }, 500);
+            }
+        }
+
+        // --- Initialization ---
+        
+        // Setup grid and listeners when the window loads
+        window.onload = function() {
+            initializeGrid();
+            verifyButton.addEventListener('click', checkCode);
+        };
+    </script>
+</body>
+</html>
