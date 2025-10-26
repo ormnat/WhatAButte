@@ -234,7 +234,8 @@
                 // Hide the main puzzle content
                 puzzleContent.classList.add('hidden');
                 
-                // Construct the success content with the image
+                // Construct the success content with the image. 
+                // Added object-contain and mx-auto for better display.
                 successDisplay.innerHTML = `
                     <h2 class="text-3xl sm:text-4xl font-extrabold text-green-500 mb-6 tracking-wider">
                         CONGRATULATIONS! CODE ACCEPTED!
@@ -242,7 +243,8 @@
                     <img 
                         src="To Correct an Injustice.jpg" 
                         alt="A detailed drawing of two skeletons in suits in a library, titled 'To Correct an Injustice.'" 
-                        class="rounded-xl shadow-2xl max-w-full h-auto border-4 border-yellow-500 transition duration-300 transform hover:scale-[1.01]" 
+                        class="rounded-xl shadow-2xl max-w-full h-auto mx-auto border-4 border-yellow-500 object-contain transition duration-300 transform hover:scale-[1.01]" 
+                        style="max-height: 80vh;"
                     />
                 `;
                 
